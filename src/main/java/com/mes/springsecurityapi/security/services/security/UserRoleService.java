@@ -7,5 +7,5 @@ import reactor.core.publisher.Mono;
  */
 public interface UserRoleService {
 
-    Mono<Void> insert(String username, String roleName);
+    Mono<Void> upsert(String username, String roleName);
 }

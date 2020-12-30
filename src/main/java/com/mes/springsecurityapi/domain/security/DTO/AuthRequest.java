@@ -1,4 +1,4 @@
-package com.mes.springsecurityapi.domain.security;
+package com.mes.springsecurityapi.domain.security.DTO;
 
 import com.mes.springsecurityapi.domain.security.validators.ExtendedEmailValidator;
 import lombok.AllArgsConstructor;

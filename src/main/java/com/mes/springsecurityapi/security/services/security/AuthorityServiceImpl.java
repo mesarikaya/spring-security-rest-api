@@ -9,9 +9,12 @@ import com.mes.springsecurityapi.repositories.security.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import javax.validation.constraints.NotNull;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -31,11 +34,54 @@ public class AuthorityServiceImpl implements AuthorityService{
     public Mono<Set<Authority>> getUserAuthorities(String username) {
         Mono<User> userMono = userRepository.findByUsername(username);
         Flux<Role> rolesFlux = userMono
-                .map(user-> user.getId())
-                .flatMapMany(userId -> roleRepository.findByUserId(userId));
+                .map(User::getId)
+                .flatMapMany(roleRepository::findByUserId);
         Flux<Authority> authoritiesFlux = rolesFlux
                 .flatMapSequential(roles -> authoritiesRepository.findByAuthoritiesByRoleId(roles.getId()));
 
         return authoritiesFlux.collect(Collectors.toSet());
+    }
+
+    @Transactional
+    @Override
+    public Mono<Authority> saveOrUpdate(@NotNull Authority authority) {
+        if (Objects.isNull(authority)){
+            if (!Objects.isNull(authority.getPermission())){
+                return this.createAuthority(authority);
+            } else{
+
+                return authoritiesRepository.findByPermission(authority.getPermission())
+                        .next()
+                        .flatMap(authorityInDb -> {
+                            log.debug("Authority in db is: {}", authorityInDb);
+                            log.debug("Update the role");
+                            authority.setId(authorityInDb.getId());
+                            log.debug("Authority in repository: {}", authority);
+                            return authoritiesRepository.save(authority);
+                        })
+                        .switchIfEmpty(Mono.defer(() -> {
+                            log.debug("Creating a new Authority.");
+                            log.debug("Authority in repository: {}", authority);
+                            return this.createAuthority(authority);
+                        }));
+            }
+        }else{
+            log.debug("A Null user data is entered. Do not process!");
+            return Mono.empty();
+        }
+    }
+
+    private Mono<Authority> createAuthority(Authority authority) {
+
+        if (Objects.isNull(authority)) {
+            return Mono.empty();
+        }
+
+        return authoritiesRepository.save(authority);
+    }
+
+    @Override
+    public Mono<Authority> upsert(String permission) {
+        return authoritiesRepository.upsert(permission);
     }
 }

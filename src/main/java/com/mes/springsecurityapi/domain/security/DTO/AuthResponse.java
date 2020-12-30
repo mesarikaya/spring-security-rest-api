@@ -1,4 +1,4 @@
-package com.mes.springsecurityapi.domain.security;
+package com.mes.springsecurityapi.domain.security.DTO;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

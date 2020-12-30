@@ -1,9 +1,9 @@
 package com.mes.springsecurityapi.repositories.security;
 
-import com.mes.springsecurityapi.domain.security.Authority;
+import com.mes.springsecurityapi.domain.security.DTO.UserRoleAndAuthoritiesDTO;
 import com.mes.springsecurityapi.domain.security.SecurityUserLibrary;
 import com.mes.springsecurityapi.domain.security.User;
-import com.mes.springsecurityapi.security.services.security.AuthorityService;
+import com.mes.springsecurityapi.security.services.security.JoinService;
 import com.mes.springsecurityapi.security.services.security.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,12 +22,12 @@ import java.util.Set;
 public class SecurityUserLibraryRepository implements ReactiveUserDetailsService, ReactiveUserDetailsPasswordService {
 
     private final UserService userService;
-    private final AuthorityService authorityService;
+    private final JoinService joinService;
 
     @Override
     public Mono<UserDetails> findByUsername(String username) {
 
-        Mono<Set<Authority>> authoritySetMono = authorityService.getUserAuthorities(username);
+        Mono<Set<UserRoleAndAuthoritiesDTO>> authoritySetMono = joinService.findByUsername(username);
         Mono<User> userMono = userService.findByUserName(username);
         log.debug("****CALLING SECURITY DETAILS REPOSITORY FIND BY USERNAME FUNCTION*****");
         return userMono.zipWith(authoritySetMono)
@@ -37,7 +37,7 @@ public class SecurityUserLibraryRepository implements ReactiveUserDetailsService
                 }))
                 .map(tuple -> {
                     User user = tuple.getT1();
-                    Set<Authority> authoritySet = tuple.getT2();
+                    Set<UserRoleAndAuthoritiesDTO> authoritySet = tuple.getT2();
                     return new SecurityUserLibrary(user, authoritySet);
                 });
     }
@@ -46,7 +46,7 @@ public class SecurityUserLibraryRepository implements ReactiveUserDetailsService
     public Mono<UserDetails> updatePassword(UserDetails user, String newPassword) {
         log.debug("Password upgrade for user with name '{}'", user.getUsername());
         log.debug("Password upgraded from '{}' to '{}'", user.getPassword(), newPassword);
-        Mono<Set<Authority>> authoritySetMono = authorityService.getUserAuthorities(user.getUsername());
+        Mono<Set<UserRoleAndAuthoritiesDTO>> authoritySetMono = joinService.findByUsername(user.getUsername());
         Mono<User> userMono = userService.findByUserName(user.getUsername());
         return userMono.zipWith(authoritySetMono)
                 .switchIfEmpty(Mono.defer(() -> {

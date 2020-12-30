@@ -20,6 +20,8 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
 
+    @Transactional
+    @Override
     public Mono<User> saveOrUpdateUser(User user) {
         if (Objects.isNull(user)){
             if (!Objects.isNull(user.getUsername())){
@@ -28,15 +30,15 @@ public class UserServiceImpl implements UserService {
 
                 return userRepository.findById(user.getId())
                         .flatMap(userInDb -> {
-                            log.debug("user in db is: " + userInDb);
+                            log.debug("user in db is: {}", userInDb);
                             log.info("Update the user");
                             user.setId(userInDb.getId());
-                            log.info("USER in repository: " + user);
+                            log.info("User in repository: {}", user);
                             return userRepository.save(user);
                         })
                         .switchIfEmpty(Mono.defer(() -> {
                             log.info("Creating a new User");
-                            log.info("USER in repository: " + user);
+                            log.info("User in repository: {}", user);
                             return this.createUser(user);
                         }));
             }

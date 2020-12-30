@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Mono;
 
 @Slf4j
@@ -19,6 +20,7 @@ public class SecurityUserLibraryServiceImpl implements SecurityUserLibraryServic
         return securityUserLibraryRepository.findByUsername(userName);
     }
 
+    @Transactional
     @Override
     public Mono<UserDetails> updatePassword(UserDetails user, String newPassword) {
         return securityUserLibraryRepository.updatePassword(user, newPassword);

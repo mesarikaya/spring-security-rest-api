@@ -15,7 +15,7 @@ import org.springframework.data.relational.core.mapping.Table;
 @Builder
 @Table("authorities")
 public class Authority {
-
+    
     @Id
     private Integer id;
 

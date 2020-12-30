@@ -7,5 +7,5 @@ import java.lang.annotation.RetentionPolicy;
 
 @Retention(RetentionPolicy.RUNTIME)
 @PreAuthorize("hasAuthority('client.rights')")
-public @interface UserPermission {
+public @interface ClientPermission {
 }

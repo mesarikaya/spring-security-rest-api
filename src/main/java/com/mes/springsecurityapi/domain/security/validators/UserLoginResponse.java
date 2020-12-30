@@ -1,6 +1,6 @@
 package com.mes.springsecurityapi.domain.security.validators;
 
-import com.mes.springsecurityapi.domain.security.AuthRequest;
+import com.mes.springsecurityapi.domain.security.DTO.AuthRequest;
 import lombok.Data;
 
 import java.util.Map;

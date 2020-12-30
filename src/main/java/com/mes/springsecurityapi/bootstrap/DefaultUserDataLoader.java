@@ -74,32 +74,32 @@ public class DefaultUserDataLoader implements CommandLineRunner {
         //Mono<User> adminUserMono = userRepository.findByUsername(ADMIN_USER);
         //Flux<Role> adminRoleFlux = roleRepository.findByName("ADMIN");
         //createUserRoleData(adminUserMono, adminRoleFlux);
-        userRoleService.insert(ADMIN_USER, "ADMIN").block(Duration.ofSeconds(10));
+        userRoleService.upsert(ADMIN_USER, "ADMIN").block(Duration.ofSeconds(10));
 
         //Mono<User> clientUserMono  = userRepository.findByUsername(CLIENT_USER);
         //Flux<Role> clientRoleFlux = roleRepository.findByName("CLIENT");
         //createUserRoleData(clientUserMono, clientRoleFlux);
-        userRoleService.insert(CLIENT_USER, "CLIENT").block(Duration.ofSeconds(10));
+        userRoleService.upsert(CLIENT_USER, "CLIENT").block(Duration.ofSeconds(10));
 
         //Mono<User> guestUserMono  = userRepository.findByUsername(GUEST_USER);
         //Flux<Role> guestRoleFlux = roleRepository.findByName("GUEST");
         //createUserRoleData(guestUserMono, guestRoleFlux);
-        userRoleService.insert(GUEST_USER, "GUEST").block(Duration.ofSeconds(10));
+        userRoleService.upsert(GUEST_USER, "GUEST").block(Duration.ofSeconds(10));
 
 
 
         log.debug("Users Loaded: " + userRepository.count());
         //Flux<Authority> adminAuthorityFlux = authorityRepository.findByPermission("admin.rights");
         //createRoleAuthoritiesData(adminRoleFlux, adminAuthorityFlux);
-        roleAuthoritiesService.insert("ADMIN", "admin.rights").block(Duration.ofSeconds(10));
+        roleAuthoritiesService.upsert("ADMIN", "admin.rights").block(Duration.ofSeconds(10));
 
         //Flux<Authority> clientAuthorityFlux = authorityRepository.findByPermission("client.rights");
         //createRoleAuthoritiesData(clientRoleFlux, clientAuthorityFlux);
-        roleAuthoritiesService.insert("CLIENT", "client.rights").block(Duration.ofSeconds(10));
+        roleAuthoritiesService.upsert("CLIENT", "client.rights").block(Duration.ofSeconds(10));
 
         //Flux<Authority> guestAuthorityFlux = authorityRepository.findByPermission("guest.rights");
         //createRoleAuthoritiesData(guestRoleFlux, guestAuthorityFlux);
-        roleAuthoritiesService.insert("GUEST", "guest.rights").block(Duration.ofSeconds(10));
+        roleAuthoritiesService.upsert("GUEST", "guest.rights").block(Duration.ofSeconds(10));
 
         log.debug("Users Loaded: " + userRepository.count().block(Duration.ofSeconds(10)));
         log.debug("User roles are Loaded: " + userRolesRepository.count().block(Duration.ofSeconds(10)));

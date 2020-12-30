@@ -1,6 +1,7 @@
 package com.mes.springsecurityapi.security.services.security;
 
-import com.mes.springsecurityapi.domain.security.*;
+import com.mes.springsecurityapi.domain.security.Authority;
+import com.mes.springsecurityapi.domain.security.Role;
 import com.mes.springsecurityapi.repositories.security.AuthorityRepository;
 import com.mes.springsecurityapi.repositories.security.RoleAuthoritiesRepository;
 import com.mes.springsecurityapi.repositories.security.RoleRepository;
@@ -17,15 +18,16 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @RequiredArgsConstructor
 @Service
-@Transactional
 public class RoleAuthoritiesServiceImpl implements RoleAuthoritiesService{
 
     private final RoleRepository roleRepository;
     private final AuthorityRepository authorityRepository;
     private final RoleAuthoritiesRepository roleAuthoritiesRepository;
 
+    @Transactional
     @Override
-    public Mono<Void> insert(String roleName, String permission) {
+    public Mono<Void> upsert(String roleName, String permission) {
+
         Flux<Authority> authorityFlux = authorityRepository.findByPermission(permission);
         Flux<Role> roleFlux = roleRepository.findByName(roleName);
         return createRoleAuthoritiesData(roleFlux, authorityFlux);
@@ -33,16 +35,17 @@ public class RoleAuthoritiesServiceImpl implements RoleAuthoritiesService{
 
     private Mono<Void> createRoleAuthoritiesData(Flux<Role> roleFlux, Flux<Authority> authorityFlux) {
         roleFlux.flatMap(role -> authorityFlux
-                .map(authority -> {
-                    RoleAuthorities roleAuthorities = RoleAuthorities.of(role, authority);
-                    return roleAuthoritiesRepository.save(roleAuthorities)
-                            .doOnError(error -> {
-                                log.error("The following error happened on create user Role data method!", error);
-                            })
-                            .doOnSuccess(success -> {
-                                log.debug("Role with id: {} and authority: {} is saved.", success.getRoleId(), success.getAuthorityId());
-                            }).subscribe();
-                })).subscribe();
+                .flatMap(authority ->
+                    roleAuthoritiesRepository
+                        .upsertByRoleAndPermission(role.getId(), authority.getId())
+                        .doOnError(error -> {
+                            log.error("The following error happened on create user Role data method!", error);
+                        })
+                        .doOnSuccess(success -> {
+                            log.debug("UPSERT: Role with id: {} and authority with id: {} is saved.", role.getId(),
+                                    authority.getId());
+                        })
+                )).subscribe();
 
         return Mono.empty();
     }

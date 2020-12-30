@@ -38,6 +38,14 @@ public class User implements CredentialsContainer{
 
     private String lastLogin;
 
+    private String firstName;
+
+    private String middleName;
+
+    private String lastName;
+
+    private String address;
+
     private String verificationToken;
 
     private LocalDateTime verificationExpiresAt;

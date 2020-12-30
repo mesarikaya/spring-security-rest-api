@@ -32,9 +32,7 @@ public class JWTReactiveAuthenticationManager implements ReactiveAuthenticationM
         try {
             username = jwtTokenUtil.getUsernameFromToken(authToken);
             if (jwtTokenUtil.validateToken(authToken)) {
-
                 Claims claims = jwtTokenUtil.getAllClaimsFromToken(authToken);
-
                 //String roleInClaim = claims.get("role", String.class);
                 //Role role = Role.builder().name(roleInClaim).build();
                 log.info("Authenticating for authorities: {}", claims.get("authorities", List.class));

@@ -15,7 +15,7 @@ import org.springframework.data.relational.core.mapping.Table;
 @Builder
 @Table("roles")
 public class Role {
-    
+
     @Id
     private Integer id;
 

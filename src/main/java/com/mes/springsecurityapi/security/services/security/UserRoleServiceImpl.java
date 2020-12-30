@@ -2,7 +2,6 @@ package com.mes.springsecurityapi.security.services.security;
 
 import com.mes.springsecurityapi.domain.security.Role;
 import com.mes.springsecurityapi.domain.security.User;
-import com.mes.springsecurityapi.domain.security.UserRoles;
 import com.mes.springsecurityapi.repositories.security.RoleRepository;
 import com.mes.springsecurityapi.repositories.security.UserRepository;
 import com.mes.springsecurityapi.repositories.security.UserRolesRepository;
@@ -19,15 +18,15 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @RequiredArgsConstructor
 @Service
-@Transactional
 public class UserRoleServiceImpl implements UserRoleService{
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final UserRolesRepository userRolesRepository;
 
+    @Transactional
     @Override
-    public Mono<Void> insert(String username, String roleName) {
+    public Mono<Void> upsert(String username, String roleName) {
         Mono<User> userMono = userRepository.findByUsername(username);
         Flux<Role> roleFlux = roleRepository.findByName(roleName);
         return createUserRoleData(userMono, roleFlux);
@@ -35,16 +34,15 @@ public class UserRoleServiceImpl implements UserRoleService{
 
     private Mono<Void> createUserRoleData(Mono<User> userMono, Flux<Role> roleFlux) {
        roleFlux.flatMap(role -> userMono
-               .map(user -> {
-                    UserRoles userRole = UserRoles.of(user, role);
-                    return userRolesRepository.save(userRole)
+               .map(user -> userRolesRepository.upsertByUserAndRole(user.getId(), role.getId())
                             .doOnError(error -> {
                                 log.error("The following error happened on create user Role data method!", error);
                             })
                             .doOnSuccess(success -> {
-                                log.debug("User with id: {} and role: {} is saved.", success.getUserId(), success.getRoleId());
-                            }).subscribe();
-               })).subscribe();
+                                log.debug("UPSERT: User with id: {} and role with id: {} is saved.",
+                                        user.getId(), role.getId());
+                            }).subscribe()
+               )).subscribe();
        return Mono.empty();
     }
 
