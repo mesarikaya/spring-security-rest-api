@@ -32,24 +32,24 @@ public class SecurityContextRepository implements ServerSecurityContextRepositor
     @Override
     public Mono<SecurityContext> load(ServerWebExchange swe) {
 
-        log.info("Load security context Server Exchange load");
+        log.debug("Load security context Server Exchange load");
         ServerHttpRequest request = swe.getRequest();
-        log.info("Request is:" + request.getHeaders());
+        log.debug("Request is:" + request.getHeaders());
         String authHeader = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
-        log.info("Auth header: " + authHeader);
+        log.debug("Auth header: " + authHeader);
         try {
             if (authHeader != null && authHeader.startsWith("Bearer ")) {
                 String authToken = authHeader.substring(7);
                 Authentication auth = new UsernamePasswordAuthenticationToken(authToken, authToken);
-                log.info("Auth is set: " + auth);
+                log.debug("Auth is set: " + auth);
                 return this.JWTReactiveAuthenticationManager.authenticate(auth).map((authentication) -> {
-                    log.info("Calling authenticate method");
+                    log.debug("Calling authenticate method");
                     SecurityContextImpl scImpl =  new SecurityContextImpl(authentication);
-                    log.info("In auth manager map: " + scImpl);
+                    log.debug("In auth manager map: " + scImpl);
                     return scImpl;
                 });
             } else {
-                log.info("********WRONG CREDENTIALS OR SECURITY IS MISSED*********");
+                log.debug("********WRONG CREDENTIALS OR SECURITY IS MISSED*********");
                 return Mono.empty();
             }
         }catch(Exception ex){

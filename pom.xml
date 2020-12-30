@@ -82,8 +82,9 @@
             <artifactId>r2dbc-postgresql</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-mail-client</artifactId>
+            <version>4.0.0</version>
         </dependency>
 
         <dependency>
@@ -122,15 +123,11 @@
             <artifactId>spring-security-test</artifactId>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
-            <version>1.4.200</version>
-        </dependency>
+        <!-- https://mvnrepository.com/artifact/org.hibernate/hibernate-annotations -->
         <dependency>
             <groupId>org.hibernate</groupId>
-            <artifactId>hibernate-tools</artifactId>
-            <version>5.4.26.Final</version>
+            <artifactId>hibernate-annotations</artifactId>
+            <version>3.5.6-Final</version>
         </dependency>
     </dependencies>
 

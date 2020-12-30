@@ -14,6 +14,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.Set;
 
 @Slf4j
@@ -53,7 +55,11 @@ public class SecurityUserLibraryRepository implements ReactiveUserDetailsService
                     log.warn("User not found in In memory User Details Repository method");
                     return Mono.error(new UsernameNotFoundException("User Not Found"));
                 }))
-                .doOnSuccess(u -> u.getT1().setPassword(newPassword))
+                .doOnSuccess(u -> {
+                    User userFromTuple = u.getT1();
+                    userFromTuple.setPassword(newPassword);
+                    userFromTuple.setLastModifiedDate(Timestamp.from(Instant.now()));
+                })
                 .map(u -> {
                     userService.saveOrUpdateUser(u.getT1());
                     return new SecurityUserLibrary(u.getT1(), u.getT2());

@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.Objects;
@@ -19,6 +20,11 @@ import java.util.Objects;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+
+    @Override
+    public Flux<User> findAll() {
+        return userRepository.findAll();
+    }
 
     @Transactional
     @Override

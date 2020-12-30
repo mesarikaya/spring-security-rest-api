@@ -27,7 +27,7 @@ public class JWTReactiveAuthenticationManager implements ReactiveAuthenticationM
     @Override
     public Mono<Authentication> authenticate(Authentication authentication) {
         String authToken = authentication.getCredentials().toString();
-
+        log.debug("Inside authenticate function from JWTManager.");
         String username;
         try {
             username = jwtTokenUtil.getUsernameFromToken(authToken);
@@ -35,14 +35,14 @@ public class JWTReactiveAuthenticationManager implements ReactiveAuthenticationM
                 Claims claims = jwtTokenUtil.getAllClaimsFromToken(authToken);
                 //String roleInClaim = claims.get("role", String.class);
                 //Role role = Role.builder().name(roleInClaim).build();
-                log.info("Authenticating for authorities: {}", claims.get("authorities", List.class));
+                log.debug("Authenticating for authorities: {}", claims.get("authorities", List.class));
                 List<String> authoritiesMap = claims.get("authorities", List.class);
                 Set<Authority> authorities = new HashSet<>();
                 authoritiesMap.forEach(( authority ) -> authorities.add(Authority.builder().permission(authority).build()));
-
+                log.debug("Authorities set: {}", authorities);
                 //role.setAuthorities(authorities);
 
-                log.info("HERE IN AUTHENTICATE*****: " + "- Authorities: " + authorities);
+                log.debug("HERE IN AUTHENTICATE*****: " + "- Authorities: " + authorities);
                 UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
                         username,
                         null,
@@ -50,14 +50,16 @@ public class JWTReactiveAuthenticationManager implements ReactiveAuthenticationM
                                 .map(authority -> new SimpleGrantedAuthority(authority.getPermission())) // TODO: Check if ROLE_ is needed
                                 .collect(Collectors.toList())
                 );
-                log.info("Finalized auth: " + auth);
+                log.debug("Finalized auth: " + auth);
                 return Mono.just(auth);
             }else{
-                log.info("Invalid token. Send null");
-                 return Mono.empty();
+                log.debug("Invalid token. Send null");
+                return Mono.empty();
             }
         } catch (Exception ex) {
-                log.info("Error in examining token");
+                log.debug("Error in examining token {}", ex.getMessage());
+                log.debug("Trace: {}", ex.getStackTrace());
+
                 return Mono.empty();
         }
     }

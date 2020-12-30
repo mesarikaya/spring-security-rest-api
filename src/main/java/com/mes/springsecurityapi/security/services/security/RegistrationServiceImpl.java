@@ -15,6 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Mono;
 
 import javax.validation.constraints.NotNull;
+import java.sql.Timestamp;
+import java.time.Instant;
 
 /**
  * Created by mesar on 12/28/2020
@@ -64,6 +66,8 @@ public class RegistrationServiceImpl implements RegistrationService {
                 .firstName(userDTO.getFirstName())
                 .middleName(userDTO.getMiddleName())
                 .lastName(userDTO.getLastName())
+                .createdDate(Timestamp.from(Instant.now()))
+                .lastModifiedDate(Timestamp.from(Instant.now()))
                 .address(address)
                 .build();
 

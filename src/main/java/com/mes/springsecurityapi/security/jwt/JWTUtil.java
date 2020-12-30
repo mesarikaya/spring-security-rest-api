@@ -16,6 +16,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -89,11 +90,14 @@ public class JWTUtil implements Serializable  {
         return (AUDIENCE_TABLET.equals(audience) || AUDIENCE_MOBILE.equals(audience));
     }
 
-
     public String generateToken(SecurityUserLibrary userDetails) {
         Map<String, Object> claims = new HashMap<>();
         log.info("User is: {}", userDetails);
-        claims.put("authorities", userDetails.getAuthorities());
+        claims.put("authorities",
+                userDetails.getAuthorities()
+                        .stream()
+                        .map(grantedAuthority -> grantedAuthority.getAuthority())
+                        .collect(Collectors.toList()));
         String value = doGenerateToken(claims, userDetails.getUsername(), generateAudience());
         return value;
     }
@@ -128,9 +132,9 @@ public class JWTUtil implements Serializable  {
         secretService.refreshSecrets();
         signingKey = secretService.getHS512SecretKey();
         return Jwts.builder()
-                            .setClaims(claims)
-                            .signWith(signingKey, SignatureAlgorithm.HS512 )
-                            .compact();
+                .setClaims(claims)
+                .signWith(signingKey, SignatureAlgorithm.HS512 )
+                .compact();
     }
 
     public Boolean validateToken(String token) {
