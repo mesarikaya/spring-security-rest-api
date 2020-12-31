@@ -1,15 +1,13 @@
 package com.mes.springsecurityapi.config.mail;
 
+import io.vertx.core.Vertx;
 import io.vertx.ext.mail.MailClient;
 import io.vertx.ext.mail.MailConfig;
 import io.vertx.ext.mail.StartTLSOptions;
-import lombok.RequiredArgsConstructor;
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Bean
-import io.vertx.core.Vertx;
 
 /**
  * Created by mesar on 12/30/2020
@@ -18,34 +16,36 @@ import io.vertx.core.Vertx;
 @Configuration
 public class VertxMailServerConfig {
 
-    /*
-    //@Value("${vertx.mail.port}")
-    private final String port;
-
-    //@Value("${vertx.mail.username}")
+    private final int port;
     private final String username;
-
-    //@Value("${vertx.mail.password}")
     private final String password;
-
-    //@Value("${vertx.mail.ssl}")
     private final Boolean sslRequired;
-
-    //@Value("${vertx.mail.host}")
     private final String host;
 
-     */
+    public VertxMailServerConfig(@Value("${vertx.mail.port}") int port,
+                                 @Value("${vertx.mail.username}") String username,
+                                 @Value("${vertx.mail.password}") String password,
+                                 @Value("${vertx.mail.ssl}") Boolean sslRequired,
+                                 @Value("${vertx.mail.host}") String host) {
+        this.port = port;
+        this.username = username;
+        this.password = password;
+        this.sslRequired = sslRequired;
+        this.host = host;
+    }
+
+
     @Bean
     public MailClient configure(){
-
+        log.debug("Host of vertx: {}, port: {}, sslReq: {}", host, port, sslRequired);
         Vertx vertx = Vertx.vertx();
         MailConfig config = new MailConfig();
-        config.setHostname("smtp.mailtrap.io");
-        config.setPort(2525);
-        config.setSsl(true);
+        config.setHostname(host);
+        config.setPort(port);
+        config.setSsl(sslRequired);
         config.setStarttls(StartTLSOptions.REQUIRED);
-        config.setUsername("b4beedb413dab9");
-        config.setPassword("70ab8c3506a1eb");
+        config.setUsername(username);
+        config.setPassword(password);
         MailClient mailClient = MailClient.create(vertx, config);
         log.debug("Vertx mail client is: {}", mailClient.toString());
         return mailClient;

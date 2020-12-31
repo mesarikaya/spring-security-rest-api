@@ -74,7 +74,6 @@ public class SecurityConfig {
                 .matchers(EndpointRequest.to("health")).permitAll()
                 .matchers(EndpointRequest.to("info")).permitAll()
                 .pathMatchers("/").permitAll()
-                .pathMatchers("/h2-console").permitAll()
                 .pathMatchers("/manifest.json", "/favicon.ico").permitAll()
                 .pathMatchers("/static/js/**", "/static/media/**","/static/css/**", "/service-worker.js").permitAll()
                 .pathMatchers("/api/auth/login**").permitAll()

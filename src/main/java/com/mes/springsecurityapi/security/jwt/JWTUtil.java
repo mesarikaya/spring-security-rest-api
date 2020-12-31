@@ -8,6 +8,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.impl.DefaultClock;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.Serializable;
@@ -20,9 +21,10 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Component
-public class JWTUtil implements Serializable  {
+public class JWTUtil implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1747172840725831462L;
+
     static final String CLAIM_KEY_USERNAME = "sub";
     static final String CLAIM_KEY_AUDIENCE = "aud";
     static final String CLAIM_KEY_CREATED = "iat";
@@ -33,11 +35,13 @@ public class JWTUtil implements Serializable  {
     
     private final Clock clock = DefaultClock.INSTANCE;
     private Key signingKey;
-    //@Value("${jwt_expiration}")
-    private final Long expiration = (long) 28880;
+
+    @Value("${jwt.expiration}")
+    private Long expiration;
+
     private final SecretService secretService;
 
-    public JWTUtil( SecretService secretService) {
+    public JWTUtil(SecretService secretService) {
         this.secretService = secretService;
         this.signingKey = secretService.getHS512SecretKey();
     }
@@ -92,7 +96,7 @@ public class JWTUtil implements Serializable  {
 
     public String generateToken(SecurityUserLibrary userDetails) {
         Map<String, Object> claims = new HashMap<>();
-        log.info("User is: {}", userDetails);
+        log.debug("User is: {}", userDetails);
         claims.put("authorities",
                 userDetails.getAuthorities()
                         .stream()
@@ -105,7 +109,8 @@ public class JWTUtil implements Serializable  {
     private String doGenerateToken(Map<String, Object> claims, String subject, String audience) {
         final Date createdDate = clock.now();
         final Date expirationDate = calculateExpirationDate(createdDate);
-        log.info("Signing key is: {}", signingKey.toString());
+
+        log.debug("Signing key is: {}", signingKey.toString());
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(subject)
@@ -123,12 +128,13 @@ public class JWTUtil implements Serializable  {
     }
 
     public String refreshToken(String token) {
+
         final Date createdDate = clock.now();
         final Date expirationDate = calculateExpirationDate(createdDate);
-
         final Claims claims = getAllClaimsFromToken(token);
         claims.setIssuedAt(createdDate);
         claims.setExpiration(expirationDate);
+
         secretService.refreshSecrets();
         signingKey = secretService.getHS512SecretKey();
         return Jwts.builder()
@@ -138,9 +144,9 @@ public class JWTUtil implements Serializable  {
     }
 
     public Boolean validateToken(String token) {
+
         final String username = getUsernameFromToken(token);
         final Date created = getIssuedAtDateFromToken(token);
-        //final Date expiration = getExpirationDateFromToken(token);
         return (
                 username.equals(username)
                         && !isTokenExpired(token)

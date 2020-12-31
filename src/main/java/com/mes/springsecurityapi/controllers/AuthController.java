@@ -14,6 +14,7 @@ import com.mes.springsecurityapi.security.services.security.RegistrationService;
 import com.mes.springsecurityapi.security.services.security.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseCookie;
@@ -47,8 +48,8 @@ public class AuthController {
     private final AuthorityService authorityService;
     private final RegistrationService registrationService;
 
-    //@Value("${cookie.secure}")
-    private final boolean isCookieSecure = false;
+    @Value("${cookie.secure}")
+    private boolean isCookieSecure = false;
 
     @PostMapping("/login")
     public Mono<ResponseEntity<?>> login(@RequestBody AuthRequest ar, ServerHttpResponse serverHttpResponse) {
@@ -57,7 +58,6 @@ public class AuthController {
         Mono<Set<Authority>> authoritySetMono = authorityService.getUserAuthorities(ar.getUserName());
         Mono<User> userMono = userService.findByUserName(ar.getUserName());
         Mono<Set<UserRoleAndAuthoritiesDTO>> joinMono = joinService.findByUsername(ar.getUserName());
-
         return userMono.zipWith(joinMono)
                 .map(tuple -> {
                     User user = tuple.getT1();
@@ -118,8 +118,8 @@ public class AuthController {
     @PostMapping("/register")
     public Mono<ResponseEntity<?>> registerClient(@RequestBody UserDTO userDTO,
                                                 ServerHttpRequest serverHttpRequest) {
-
-        return registrationService.registerClient(userDTO);
+        String origin = serverHttpRequest.getHeaders().getOrigin();
+        return registrationService.registerClient(userDTO, origin);
     }
 
 }

@@ -33,21 +33,18 @@ public class JWTReactiveAuthenticationManager implements ReactiveAuthenticationM
             username = jwtTokenUtil.getUsernameFromToken(authToken);
             if (jwtTokenUtil.validateToken(authToken)) {
                 Claims claims = jwtTokenUtil.getAllClaimsFromToken(authToken);
-                //String roleInClaim = claims.get("role", String.class);
-                //Role role = Role.builder().name(roleInClaim).build();
                 log.debug("Authenticating for authorities: {}", claims.get("authorities", List.class));
                 List<String> authoritiesMap = claims.get("authorities", List.class);
                 Set<Authority> authorities = new HashSet<>();
                 authoritiesMap.forEach(( authority ) -> authorities.add(Authority.builder().permission(authority).build()));
                 log.debug("Authorities set: {}", authorities);
-                //role.setAuthorities(authorities);
 
                 log.debug("HERE IN AUTHENTICATE*****: " + "- Authorities: " + authorities);
                 UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
                         username,
                         null,
                         authorities.stream()
-                                .map(authority -> new SimpleGrantedAuthority(authority.getPermission())) // TODO: Check if ROLE_ is needed
+                                .map(authority -> new SimpleGrantedAuthority(authority.getPermission()))
                                 .collect(Collectors.toList())
                 );
                 log.debug("Finalized auth: " + auth);
@@ -58,8 +55,6 @@ public class JWTReactiveAuthenticationManager implements ReactiveAuthenticationM
             }
         } catch (Exception ex) {
                 log.debug("Error in examining token {}", ex.getMessage());
-                log.debug("Trace: {}", ex.getStackTrace());
-
                 return Mono.empty();
         }
     }

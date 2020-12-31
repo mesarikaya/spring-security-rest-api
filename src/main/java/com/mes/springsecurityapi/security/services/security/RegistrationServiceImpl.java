@@ -5,10 +5,12 @@ import com.mes.springsecurityapi.domain.security.DTO.UserDTO;
 import com.mes.springsecurityapi.domain.security.Role;
 import com.mes.springsecurityapi.domain.security.User;
 import com.mes.springsecurityapi.repositories.security.UserRepository;
+import com.mes.springsecurityapi.security.services.email.EmailService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,11 +33,12 @@ public class RegistrationServiceImpl implements RegistrationService {
     private final RoleService roleService;
     private final RoleAuthoritiesService roleAuthoritiesService;
     private final UserRoleService userRolesService;
+    private final EmailService emailService;
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
     @Override
-    public Mono<ResponseEntity<?>> registerClient(@NotNull UserDTO userDTO) {
+    public Mono<ResponseEntity<?>> registerClient(@NotNull UserDTO userDTO, String origin) {
 
         return userRepository.findByUsername(userDTO.getEmail())
                 .map(userInDb -> {
@@ -45,6 +48,7 @@ public class RegistrationServiceImpl implements RegistrationService {
                 .switchIfEmpty(Mono.defer(() -> {
                     log.debug("Creating a new User: {}", userDTO);
                     return this.createRegistration(userDTO, "CLIENT", "client.rights")
+                            .map(user -> emailService.sendEmail(user, origin))
                             .thenReturn(ResponseEntity.status(HttpStatus.OK).build());
                 })).map(objectResponseEntity -> objectResponseEntity);
     }

@@ -11,5 +11,5 @@ import javax.validation.constraints.NotNull;
  */
 public interface RegistrationService {
 
-    Mono<ResponseEntity<?>> registerClient(@NotNull UserDTO userDTO);
+    Mono<ResponseEntity<?>> registerClient(@NotNull UserDTO userDTO, String origin);
 }
