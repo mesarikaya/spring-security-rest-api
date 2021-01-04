@@ -1,10 +1,7 @@
 package com.mes.springsecurityapi.controllers;
 
 import com.mes.springsecurityapi.domain.security.Authority;
-import com.mes.springsecurityapi.domain.security.DTO.AuthRequest;
-import com.mes.springsecurityapi.domain.security.DTO.AuthResponse;
-import com.mes.springsecurityapi.domain.security.DTO.UserDTO;
-import com.mes.springsecurityapi.domain.security.DTO.UserRoleAndAuthoritiesDTO;
+import com.mes.springsecurityapi.domain.security.DTO.*;
 import com.mes.springsecurityapi.domain.security.SecurityUserLibrary;
 import com.mes.springsecurityapi.domain.security.User;
 import com.mes.springsecurityapi.security.jwt.JWTUtil;
@@ -22,11 +19,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Controller;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
 
 import java.util.Set;
@@ -37,8 +33,7 @@ import java.util.Set;
 @Slf4j
 @RequiredArgsConstructor
 @RequestMapping(path = "/api/auth/", produces = {MediaType.APPLICATION_JSON_VALUE})
-@Transactional
-@Controller
+@RestController
 public class AuthController {
 
     private final JWTUtil jwtUtil;
@@ -53,17 +48,17 @@ public class AuthController {
 
     @PostMapping("/login")
     public Mono<ResponseEntity<?>> login(@RequestBody AuthRequest ar, ServerHttpResponse serverHttpResponse) {
-        log.info("Searching for user: {} and password: {}", ar.getUserName(), ar.getPassword());
+        log.info("Searching for user: {} and password: {}", ar.getUsername(), ar.getPassword());
 
-        Mono<Set<Authority>> authoritySetMono = authorityService.getUserAuthorities(ar.getUserName());
-        Mono<User> userMono = userService.findByUserName(ar.getUserName());
-        Mono<Set<UserRoleAndAuthoritiesDTO>> joinMono = joinService.findByUsername(ar.getUserName());
+        Mono<Set<Authority>> authoritySetMono = authorityService.getUserAuthorities(ar.getUsername());
+        Mono<User> userMono = userService.findByUsername(ar.getUsername());
+        Mono<Set<UserRoleAndAuthoritiesDTO>> joinMono = joinService.findByUsername(ar.getUsername());
         return userMono.zipWith(joinMono)
                 .map(tuple -> {
                     User user = tuple.getT1();
                     Set<UserRoleAndAuthoritiesDTO> userRolesAndAuths = tuple.getT2();
                     log.info("Found user: {} and roles & authorities: {}", user, userRolesAndAuths);
-                    if (passwordEncoder.matches(ar.getPassword(), user.getPassword())) {
+                    if (passwordEncoder.matches(ar.getPassword(), user.getPassword()) && user.getIsVerified()) {
                         log.debug("Authorized via Controller!");
                         log.debug("Create a new SecurityUserLibrary object.");
                         SecurityUserLibrary securityUserLibrary = new SecurityUserLibrary(user, userRolesAndAuths);
@@ -85,41 +80,26 @@ public class AuthController {
                         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
                     }
                 }).defaultIfEmpty(ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
-
-        /*return userMono.zipWith(authoritySetMono)
-                .map(tuple -> {
-                    User user = tuple.getT1();
-                    Set<Authority> authoritySet = tuple.getT2();
-                    log.info("Found user: {} and authorities: {}", user.getUsername(), authoritySet);
-                    if (passwordEncoder.matches(ar.getPassword(), user.getPassword())) {
-                        log.debug("Authorized via Controller!");
-                        log.debug("Create a new SecurityUserLibrary object.");
-                        SecurityUserLibrary securityUserLibrary = new SecurityUserLibrary(user, authoritySet);
-                        String token = jwtUtil.generateToken(securityUserLibrary);
-
-                        ResponseCookie cookie = ResponseCookie.from("System", token)
-                                .sameSite("Strict")
-                                .path("/")
-                                .maxAge(3000)
-                                .secure(isCookieSecure)
-                                .httpOnly(true)
-                                .build();
-                        serverHttpResponse.addCookie(cookie);
-                        return ResponseEntity.ok()
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .body(new AuthResponse(token, user.getUsername()));
-                    } else {
-                        log.info("Returning unauthorized");
-                        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-                    }
-                }).defaultIfEmpty(ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());*/
     }
 
     @PostMapping("/register")
-    public Mono<ResponseEntity<?>> registerClient(@RequestBody UserDTO userDTO,
-                                                ServerHttpRequest serverHttpRequest) {
-        String origin = serverHttpRequest.getHeaders().getOrigin();
-        return registrationService.registerClient(userDTO, origin);
+    public Mono<HttpResponse> registerClient(@RequestBody UserDTO userDTO,
+                                             ServerHttpRequest serverHttpRequest) {
+        log.debug("Inside the register client function from the controller");
+        return registrationService.registerClient(userDTO, serverHttpRequest);
+    }
+
+    @PostMapping("/verify")
+    public Mono<HttpResponse> sendUserVerification(@RequestBody SendVerificationForm sendVerificationForm,
+                                                   ServerHttpRequest serverHttpRequest) {
+
+        return registrationService.sendVerificationRequest(sendVerificationForm, serverHttpRequest);
+    }
+
+    @PostMapping("/verify/validate")
+    public Mono<HttpResponse> validateVerificationToken(@RequestBody ValidateVerificationForm validateVerificationForm){
+        log.debug("Request: Validating user", validateVerificationForm);
+        return registrationService.validateVerificationToken(validateVerificationForm);
     }
 
 }

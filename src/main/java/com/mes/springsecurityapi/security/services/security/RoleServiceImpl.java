@@ -2,7 +2,6 @@ package com.mes.springsecurityapi.security.services.security;
 
 import com.mes.springsecurityapi.domain.security.Role;
 import com.mes.springsecurityapi.domain.security.User;
-import com.mes.springsecurityapi.repositories.security.AuthorityRepository;
 import com.mes.springsecurityapi.repositories.security.RoleRepository;
 import com.mes.springsecurityapi.repositories.security.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +25,6 @@ public class RoleServiceImpl implements RoleService{
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
-    private final AuthorityRepository authoritiesRepository;
 
     @Override
     public Mono<Set<Role>> getUserRoles(String username) {

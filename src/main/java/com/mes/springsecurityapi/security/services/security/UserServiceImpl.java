@@ -29,11 +29,10 @@ public class UserServiceImpl implements UserService {
     @Transactional
     @Override
     public Mono<User> saveOrUpdateUser(User user) {
-        if (Objects.isNull(user)){
+        if (!Objects.isNull(user)){
             if (!Objects.isNull(user.getUsername())){
                 return this.createUser(user);
             } else{
-
                 return userRepository.findById(user.getId())
                         .flatMap(userInDb -> {
                             log.debug("user in db is: {}", userInDb);
@@ -64,7 +63,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Mono<User> findByUserName(String username) {
+    public Mono<User> findByUsername(String username) {
         return userRepository.findByUsername(username);
     }
 }

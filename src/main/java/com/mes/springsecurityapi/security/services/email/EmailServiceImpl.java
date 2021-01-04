@@ -1,17 +1,15 @@
 package com.mes.springsecurityapi.security.services.email;
 
 
+import com.mes.springsecurityapi.domain.security.DTO.HttpResponse;
 import com.mes.springsecurityapi.domain.security.User;
 import io.vertx.ext.mail.MailClient;
 import io.vertx.ext.mail.MailMessage;
-import io.vertx.ext.mail.MailResult;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.server.ServerResponse;
-import reactor.core.publisher.Mono;
+
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Created by mesar on 12/31/2020
@@ -27,7 +25,7 @@ public class EmailServiceImpl implements EmailService {
     }
 
     @Override
-    public Mono<ResponseEntity<?>> sendEmail(User user, String origin) {
+    public HttpResponse sendEmail(User user, String origin) {
 
         MailMessage message = new MailMessage();
         log.debug("Verification email implementation active.");
@@ -38,7 +36,7 @@ public class EmailServiceImpl implements EmailService {
                 "We are delighted to see you joining our growing member base."+ "<br>" +
                 "To be able to finalize the sign up process, please verify your account by clicking the link: " + "<br>" +
                 origin + "/"  + "verify/validate" +
-                "/" + user.getUsername()+ "/" + user.getVerificationToken() + "." +"<br>"+ "<br>" +
+                "/" + user.getVerificationToken() + "." +"<br>"+ "<br>" +
                 "Thanks for choosing us." + "<br>" +
                 "Kind Regards," + "<br>" + "On behalf of Team";
         message.setSubject(subject);
@@ -46,11 +44,26 @@ public class EmailServiceImpl implements EmailService {
         message.setFrom(from);
         message.setHtml(content);
 
-        mailClient
-            .sendMail(message)
-            .onSuccess(System.out::println)
-            .onFailure(Throwable::printStackTrace);
+        AtomicReference<HttpResponse> response = new AtomicReference<>(new HttpResponse(
+                HttpStatus.CREATED,
+                HttpResponse.ResponseType.SUCCESS,
+                "Email is successfully sent!"));
 
-        return Mono.just(ResponseEntity.ok().build());
+
+        mailClient.sendMail(message, handler -> {
+            if (handler.succeeded()){
+                response.set(new HttpResponse(
+                        HttpStatus.CREATED,
+                        HttpResponse.ResponseType.SUCCESS,
+                        "Email is successfully sent!"));
+            }else{
+                response.set(new HttpResponse(
+                        HttpStatus.BAD_REQUEST,
+                        HttpResponse.ResponseType.FAILURE,
+                        handler.cause().getLocalizedMessage()));
+            }
+        });
+
+        return response.get();
     }
 }

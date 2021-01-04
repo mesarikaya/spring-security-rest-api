@@ -1,24 +1,29 @@
 package com.mes.springsecurityapi.config.security;
 
-import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.web.reactive.config.CorsRegistry;
-import org.springframework.web.reactive.config.EnableWebFlux;
 import org.springframework.web.reactive.config.WebFluxConfigurer;
 
 /**
  * Created by mesar on 12/23/2020
  */
-@RequiredArgsConstructor
+@Slf4j
 @Configuration
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class CorsGlobalConfiguration implements WebFluxConfigurer {
 
-    //@Value("${cors.allowed_origins}")
-    private final String allowedOrigin = "http://localhost:3000";
+    private String allowedOrigin;
+
+    public CorsGlobalConfiguration(@Value("${cors.allowed_origins}") String allowedOrigin) {
+        this.allowedOrigin = allowedOrigin;
+    }
+
+    public CorsGlobalConfiguration() {
+    }
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {

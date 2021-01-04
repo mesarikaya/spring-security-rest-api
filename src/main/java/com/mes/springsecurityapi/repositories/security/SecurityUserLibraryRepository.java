@@ -11,6 +11,7 @@ import org.springframework.security.core.userdetails.ReactiveUserDetailsPassword
 import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
@@ -25,12 +26,13 @@ public class SecurityUserLibraryRepository implements ReactiveUserDetailsService
 
     private final UserService userService;
     private final JoinService joinService;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public Mono<UserDetails> findByUsername(String username) {
 
         Mono<Set<UserRoleAndAuthoritiesDTO>> authoritySetMono = joinService.findByUsername(username);
-        Mono<User> userMono = userService.findByUserName(username);
+        Mono<User> userMono = userService.findByUsername(username);
         log.debug("****CALLING SECURITY DETAILS REPOSITORY FIND BY USERNAME FUNCTION*****");
         return userMono.zipWith(authoritySetMono)
                 .switchIfEmpty(Mono.defer(() -> {
@@ -49,7 +51,7 @@ public class SecurityUserLibraryRepository implements ReactiveUserDetailsService
         log.debug("Password upgrade for user with name '{}'", user.getUsername());
         log.debug("Password upgraded from '{}' to '{}'", user.getPassword(), newPassword);
         Mono<Set<UserRoleAndAuthoritiesDTO>> authoritySetMono = joinService.findByUsername(user.getUsername());
-        Mono<User> userMono = userService.findByUserName(user.getUsername());
+        Mono<User> userMono = userService.findByUsername(user.getUsername());
         return userMono.zipWith(authoritySetMono)
                 .switchIfEmpty(Mono.defer(() -> {
                     log.warn("User not found in In memory User Details Repository method");
@@ -57,7 +59,7 @@ public class SecurityUserLibraryRepository implements ReactiveUserDetailsService
                 }))
                 .doOnSuccess(u -> {
                     User userFromTuple = u.getT1();
-                    userFromTuple.setPassword(newPassword);
+                    userFromTuple.setPassword(passwordEncoder.encode(newPassword));
                     userFromTuple.setLastModifiedDate(Timestamp.from(Instant.now()));
                 })
                 .map(u -> {

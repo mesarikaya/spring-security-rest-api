@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 import javax.validation.constraints.NotNull;
+import java.io.Serializable;
 
 /**
  * Created by mesar on 12/28/2020
@@ -16,7 +17,9 @@ import javax.validation.constraints.NotNull;
 @AllArgsConstructor
 @ToString
 @JsonIgnoreProperties(ignoreUnknown = true)
-public final class UserDTO {
+public final class UserDTO implements Serializable {
+
+    private static final long serialVersionUID = 1390765895082338835L;
 
     @NotNull
     private String firstName;

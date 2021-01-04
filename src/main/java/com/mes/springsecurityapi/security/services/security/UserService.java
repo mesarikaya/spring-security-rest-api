@@ -11,5 +11,5 @@ public interface UserService {
 
     Flux<User> findAll();
     Mono<User> saveOrUpdateUser(User user);
-    Mono<User> findByUserName(String username);
+    Mono<User> findByUsername(String username);
 }

@@ -38,6 +38,6 @@ public class UserController {
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/user")
     public Mono<User> getUser(@RequestParam("username") String username){
-        return userService.findByUserName(username);
+        return userService.findByUsername(username);
     }
 }

@@ -12,7 +12,7 @@ import org.springframework.security.core.CredentialsContainer;
 import javax.persistence.Column;
 import javax.persistence.Transient;
 import java.sql.Timestamp;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 /**
@@ -36,7 +36,7 @@ public class User implements CredentialsContainer{
 
     private String password;
 
-    private String lastLogin;
+    private Timestamp lastLogin;
 
     private String firstName;
 
@@ -48,7 +48,7 @@ public class User implements CredentialsContainer{
 
     private String verificationToken;
 
-    private LocalDateTime verificationExpiresAt;
+    private Timestamp verificationExpiresAt;
 
     @Builder.Default
     private Boolean isVerified = false;
@@ -67,7 +67,7 @@ public class User implements CredentialsContainer{
         this.username = username;
         this.password = password;
         this.verificationToken = UUID.randomUUID().toString();
-        this.verificationExpiresAt = LocalDateTime.now().plusMinutes(10);
+        this.verificationExpiresAt = Timestamp.from(Instant.now().plusSeconds(180));
     }
 
     @Builder.Default

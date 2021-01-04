@@ -5,6 +5,7 @@ import com.mes.springsecurityapi.security.SecurityPasswordEncoderFactories;
 import com.mes.springsecurityapi.security.jwt.JWTReactiveAuthenticationManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.autoconfigure.security.reactive.EndpointRequest;
 import org.springframework.boot.autoconfigure.security.reactive.PathRequest;
 import org.springframework.context.annotation.Bean;
@@ -33,10 +34,11 @@ import java.util.List;
 @EnableReactiveMethodSecurity
 public class SecurityConfig {
 
+    @Value("${cors.allowed_origin}")
+    private String allowedOrigin;
+
     private final JWTReactiveAuthenticationManager jwtReactiveAuthenticationManager;
     private final SecurityContextRepository securityContextRepository;
-    //@Value("${cors_allowed_origin}")
-    private final String allowedOrigin = "http://localhost:3000";
 
     @Bean
     PasswordEncoder passwordEncoder() {
@@ -74,11 +76,9 @@ public class SecurityConfig {
                 .matchers(EndpointRequest.to("health")).permitAll()
                 .matchers(EndpointRequest.to("info")).permitAll()
                 .pathMatchers("/").permitAll()
-                .pathMatchers("/manifest.json", "/favicon.ico").permitAll()
-                .pathMatchers("/static/js/**", "/static/media/**","/static/css/**", "/service-worker.js").permitAll()
                 .pathMatchers("/api/auth/login**").permitAll()
                 .pathMatchers("/api/auth/logout**").permitAll()
-                .pathMatchers("/api/auth/register**").permitAll()
+                .pathMatchers("/api/auth/register").permitAll()
                 .pathMatchers("/api/auth/verify**").permitAll()
                 .pathMatchers("/api/auth/verify/validate**").permitAll()
                 .anyExchange().authenticated()

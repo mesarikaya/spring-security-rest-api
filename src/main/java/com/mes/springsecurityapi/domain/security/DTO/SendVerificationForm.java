@@ -5,16 +5,22 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 
+/**
+ * Created by mesar on 1/4/2021
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-public class AuthResponse implements Serializable {
+public class SendVerificationForm implements Serializable {
 
-    private static final long serialVersionUID = -6838463640443459796L;
+    private static final long serialVersionUID = 2899076626005610034L;
 
-    private String token;
+    @NotNull
     private String username;
+    @NotNull
+    private String password;
 }
