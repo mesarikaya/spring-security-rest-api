@@ -43,7 +43,8 @@ public class LoginServiceImpl implements LoginService {
 
     @Override
     public Mono<ResponseEntity<?>> login(@NotNull AuthRequest ar, ServerHttpResponse serverHttpResponse){
-        log.info("Searching for user name: {} and password: {}", ar.getUsername(), ar.getPassword());
+
+        log.debug("Searching for username: {} and password: {}", ar.getUsername(), ar.getPassword());
 
         Mono<User> userMono = userService.findByUsername(ar.getUsername());
         Mono<Set<UserRoleAndAuthoritiesDTO>> joinMono = joinService.findByUsername(ar.getUsername());

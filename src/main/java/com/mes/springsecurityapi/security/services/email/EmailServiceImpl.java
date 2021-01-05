@@ -33,11 +33,19 @@ public class EmailServiceImpl implements EmailService {
         String subject = "Please Verify Your Registration";
         String to = user.getUsername();
         String content = "Dear " + user.getUsername() + "," + "<br>"+ "<br>" +
-                "We are delighted to see you joining our growing member base."+ "<br>" +
-                "To be able to finalize the sign up process, please verify your account by clicking the link: " + "<br>" +
-                origin + "/"  + "verify/validate" +
-                "/" + user.getVerificationToken() + "." +"<br>"+ "<br>" +
-                "Thanks for choosing us." + "<br>" +
+                "We are delighted to see you joining our growing member base." +
+                "<br>" + "<br>" +
+                "To be able to finalize the sign up process, please verify your account by clicking the below given link: " +
+                "<a style=\"font-size: 16px; border-top-width: 10px; border-bottom-width: 10px; border-radius: 5px; background: rgb(212, 131, 68) none repeat scroll 0% 0%; border-color: rgb(212, 131, 68);\"" +
+                "href=\"" + origin + "/"  + "verify/validate" + "/" + user.getVerificationToken() +
+                "\"><button>Verify Account</button></a>\n"
+                 + "<br>"+ "<br>" +
+                "Or copy baste the below given url to your browser to go to verification page:" +
+                "<br>" + "<br>" +
+                origin + "/"  + "verify/validate" + "/" + user.getVerificationToken() +
+                "<br>" + "<br>" +
+                "Thanks for choosing us." +
+                "<br>" + "<br>" +
                 "Kind Regards," + "<br>" + "On behalf of Team";
         message.setSubject(subject);
         message.setTo(to);

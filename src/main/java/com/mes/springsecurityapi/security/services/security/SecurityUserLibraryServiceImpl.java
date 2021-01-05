@@ -16,7 +16,7 @@ public class SecurityUserLibraryServiceImpl implements SecurityUserLibraryServic
     private final SecurityUserLibraryRepository securityUserLibraryRepository;
 
     @Override
-    public Mono<UserDetails> findByUserName(String userName) {
+    public Mono<UserDetails> findByUsername(String userName) {
         return securityUserLibraryRepository.findByUsername(userName);
     }
 

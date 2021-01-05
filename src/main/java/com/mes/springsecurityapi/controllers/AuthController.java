@@ -1,7 +1,9 @@
 package com.mes.springsecurityapi.controllers;
 
 import com.mes.springsecurityapi.domain.security.DTO.*;
+import com.mes.springsecurityapi.security.permissions.ClientPermission;
 import com.mes.springsecurityapi.security.services.SignupProcessService.LoginService;
+import com.mes.springsecurityapi.security.services.SignupProcessService.LogoutService;
 import com.mes.springsecurityapi.security.services.SignupProcessService.RegistrationService;
 import com.mes.springsecurityapi.security.services.SignupProcessService.VerificationService;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +29,7 @@ public class AuthController {
 
     private final RegistrationService registrationService;
     private final LoginService loginService;
+    private final LogoutService logoutService;
     private final VerificationService verificationService;
 
 
@@ -35,15 +38,19 @@ public class AuthController {
         return loginService.login(ar, serverHttpResponse);
     }
 
+    @ClientPermission
+    @PostMapping("/logout")
+    public Mono<HttpResponse> logout(@RequestBody LogoutForm logoutForm, ServerHttpResponse serverHttpResponse){
+        return logoutService.logout(logoutForm, serverHttpResponse);
+    }
+
     @PostMapping("/register")
-    public Mono<HttpResponse> registerClient(@RequestBody UserDTO userDTO,
-                                             ServerHttpRequest serverHttpRequest) {
+    public Mono<HttpResponse> registerClient(@RequestBody UserDTO userDTO, ServerHttpRequest serverHttpRequest) {
         return registrationService.registerClient(userDTO, serverHttpRequest);
     }
 
     @PostMapping("/verify")
-    public Mono<HttpResponse> sendUserVerification(@RequestBody SendVerificationForm sendVerificationForm,
-                                                   ServerHttpRequest serverHttpRequest) {
+    public Mono<HttpResponse> sendUserVerification(@RequestBody SendVerificationForm sendVerificationForm, ServerHttpRequest serverHttpRequest) {
         return verificationService.sendVerificationRequest(sendVerificationForm, serverHttpRequest);
     }
 
@@ -51,5 +58,4 @@ public class AuthController {
     public Mono<HttpResponse> validateVerificationToken(@RequestBody ValidateVerificationForm validateVerificationForm){
         return verificationService.validateVerificationToken(validateVerificationForm);
     }
-
 }

@@ -6,6 +6,6 @@ import reactor.core.publisher.Mono;
 
 public interface SecurityUserLibraryService {
 
-    Mono<UserDetails> findByUserName(String userName);
+    Mono<UserDetails> findByUsername(String userName);
     Mono<UserDetails> updatePassword(UserDetails userDetails,  String password);
 }
