@@ -1,16 +1,16 @@
-package com.mes.springsecurityapi.security.services.security;
+package com.mes.springsecurityapi.security.services.SignupProcessService;
 
-import com.mes.springsecurityapi.domain.security.Authority;
 import com.mes.springsecurityapi.domain.security.DTO.HttpResponse;
 import com.mes.springsecurityapi.domain.security.DTO.SendVerificationForm;
-import com.mes.springsecurityapi.domain.security.DTO.UserDTO;
 import com.mes.springsecurityapi.domain.security.DTO.ValidateVerificationForm;
-import com.mes.springsecurityapi.domain.security.Role;
 import com.mes.springsecurityapi.domain.security.User;
 import com.mes.springsecurityapi.repositories.security.UserRepository;
+import com.mes.springsecurityapi.security.jwt.JWTUtil;
 import com.mes.springsecurityapi.security.services.email.EmailService;
+import com.mes.springsecurityapi.security.services.security.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -29,75 +29,22 @@ import java.util.UUID;
 @Slf4j
 @RequiredArgsConstructor
 @Service
-public class RegistrationServiceImpl implements RegistrationService {
+public class VerificationServiceImpl implements VerificationService {
 
     private final UserRepository userRepository;
     private final AuthorityService authorityService;
     private final RoleService roleService;
+    private final JoinService joinService;
     private final UserService userService;
     private final RoleAuthoritiesService roleAuthoritiesService;
     private final UserRoleService userRolesService;
     private final EmailService emailService;
     private final PasswordEncoder passwordEncoder;
+    private final JWTUtil jwtUtil;
 
-    @Transactional
-    @Override
-    public Mono<HttpResponse> registerClient(@NotNull UserDTO userDTO, ServerHttpRequest serverHttpRequest) {
-
-        String origin = serverHttpRequest.getHeaders().getOrigin();
-        return userRepository.findByUsername(userDTO.getEmail())
-                .hasElement()
-                .flatMap( hasElement -> {
-                    if (hasElement){
-                        log.debug("User: {} already exists.");
-                        return Mono.just(new HttpResponse(HttpStatus.IM_USED,
-                                HttpResponse.ResponseType.FAILURE,
-                                "User already exists in our records!"));
-                    }else{
-                        log.debug("Creating a new User: {}", userDTO);
-                        return this.createRegistration(userDTO, "CLIENT", "client.rights")
-                                .flatMap(user -> Mono.just(emailService.sendEmail(user, origin)));
-                    }
-                });
-    }
-
-    private Mono<User> createRegistration(UserDTO userDTO, String role, String authority) {
-
-        Authority clientAuthority = Authority.builder().permission(authority).build();
-        Role clientRole = Role.builder().name(role).build();
-
-        String address = userDTO.getStreetName().strip() + ", "
-                + userDTO.getHouseNumber().strip() + ", "
-                + userDTO.getCity().strip() + ", "
-                + userDTO.getCountry().strip() + ", "
-                + userDTO.getZipcode().strip();
-
-
-        String verificationToken = UUID.randomUUID().toString();
-        Timestamp currentTime = Timestamp.from(Instant.now());
-        Timestamp verificationTokenExpiresAt = Timestamp.from(currentTime.toInstant().plusSeconds(180));
-
-        User user = User.builder()
-                .username(userDTO.getEmail())
-                .password(passwordEncoder.encode(userDTO.getPassword()))
-                .firstName(userDTO.getFirstName())
-                .middleName(userDTO.getMiddleName())
-                .lastName(userDTO.getLastName())
-                .createdDate(Timestamp.from(Instant.now()))
-                .verificationToken(verificationToken)
-                .verificationExpiresAt(verificationTokenExpiresAt)
-                .isVerified(false)
-                .lastModifiedDate(Timestamp.from(Instant.now()))
-                .address(address)
-                .build();
-
-        roleService.saveOrUpdate(clientRole).subscribe();
-        authorityService.saveOrUpdate(clientAuthority).subscribe();
-        roleAuthoritiesService.upsert(role, authority).subscribe();
-        userRolesService.upsert(user.getUsername(), role).subscribe();
-
-        return userRepository.save(user);
-    }
+    @Value("${cookie.secure}")
+    private boolean isCookieSecure = false;
+    private Mono<User> userMono;
 
     @Transactional
     @Override
@@ -169,7 +116,7 @@ public class RegistrationServiceImpl implements RegistrationService {
     }
 
     @Override
-    public Mono<HttpResponse> validateVerificationToken(ValidateVerificationForm validateVerificationForm){
+    public Mono<HttpResponse> validateVerificationToken(@NotNull ValidateVerificationForm validateVerificationForm){
 
         String username = validateVerificationForm.getUsername();
         String password = validateVerificationForm.getPassword();
@@ -215,5 +162,4 @@ public class RegistrationServiceImpl implements RegistrationService {
                             HttpResponse.ResponseType.FAILURE, ex.getMessage());
                 });
     }
-
 }
