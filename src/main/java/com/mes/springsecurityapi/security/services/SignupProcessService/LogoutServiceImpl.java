@@ -32,7 +32,6 @@ public class LogoutServiceImpl implements LogoutService{
     @Override
     public Mono<HttpResponse> logout(@NotNull LogoutForm logoutForm, ServerHttpResponse serverHttpResponse) {
 
-
         String username = logoutForm.getUsername();
         String token = logoutForm.getToken();
         deleteCookie(token, serverHttpResponse);

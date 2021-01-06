@@ -2,15 +2,12 @@ package com.mes.springsecurityapi.security.services.SignupProcessService;
 
 import com.mes.springsecurityapi.domain.security.DTO.HttpResponse;
 import com.mes.springsecurityapi.domain.security.DTO.SendVerificationForm;
-import com.mes.springsecurityapi.domain.security.DTO.ValidateVerificationForm;
+import com.mes.springsecurityapi.domain.security.DTO.UserVerificationForm;
 import com.mes.springsecurityapi.domain.security.User;
-import com.mes.springsecurityapi.repositories.security.UserRepository;
-import com.mes.springsecurityapi.security.jwt.JWTUtil;
 import com.mes.springsecurityapi.security.services.email.EmailService;
-import com.mes.springsecurityapi.security.services.security.*;
+import com.mes.springsecurityapi.security.services.security.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -31,20 +28,10 @@ import java.util.UUID;
 @Service
 public class VerificationServiceImpl implements VerificationService {
 
-    private final UserRepository userRepository;
-    private final AuthorityService authorityService;
-    private final RoleService roleService;
-    private final JoinService joinService;
     private final UserService userService;
-    private final RoleAuthoritiesService roleAuthoritiesService;
-    private final UserRoleService userRolesService;
     private final EmailService emailService;
     private final PasswordEncoder passwordEncoder;
-    private final JWTUtil jwtUtil;
 
-    @Value("${cookie.secure}")
-    private boolean isCookieSecure = false;
-    private Mono<User> userMono;
 
     @Transactional
     @Override
@@ -79,7 +66,7 @@ public class VerificationServiceImpl implements VerificationService {
                         return badRequestMono;
                     }else {
                         log.debug("Send Verification Request: Sending verification email as per request.");
-                        return Mono.just(emailService.sendEmail(user, origin));
+                        return Mono.just(emailService.sendAccountVerificationEmail(user, origin));
                     }
                 })
                 .flatMap(responseEntity -> {
@@ -106,7 +93,7 @@ public class VerificationServiceImpl implements VerificationService {
         Timestamp verificationTokenExpiresAt = Timestamp.from(currentTime.toInstant().plusSeconds(180));
         return userService.findByUsername(username)
                 .flatMap( user -> {
-                    log.debug("Send Verification Request: Renewing verification details for user: {}", user);
+                    log.debug("Send Verification Request: Renewing verification details for username: {}", user.getUsername());
                     user.setVerificationToken(verificationToken);
                     user.setVerificationExpiresAt(verificationTokenExpiresAt);
                     user.setIsVerified(false);
@@ -116,11 +103,11 @@ public class VerificationServiceImpl implements VerificationService {
     }
 
     @Override
-    public Mono<HttpResponse> validateVerificationToken(@NotNull ValidateVerificationForm validateVerificationForm){
+    public Mono<HttpResponse> validateVerificationToken(@NotNull UserVerificationForm userVerificationForm){
 
-        String username = validateVerificationForm.getUsername();
-        String password = validateVerificationForm.getPassword();
-        String verificationToken = validateVerificationForm.getValidationToken();
+        String username = userVerificationForm.getUsername();
+        String password = userVerificationForm.getPassword();
+        String verificationToken = userVerificationForm.getValidationToken();
 
         Mono<HttpResponse> badRequestMono = createHttpResponse(HttpStatus.BAD_REQUEST,
                 HttpResponse.ResponseType.FAILURE,"Account validation is rejected due to security reasons!");
@@ -142,6 +129,7 @@ public class VerificationServiceImpl implements VerificationService {
                             && currentTime.compareTo(user.getVerificationExpiresAt())<=0
                     ){
                         user.setIsVerified(true);
+                        user.setVerificationExpiresAt(currentTime);
                         user.setLastModifiedDate(currentTime);
                         return userService.saveOrUpdateUser(user);
                     }else{

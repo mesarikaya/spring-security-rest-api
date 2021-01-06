@@ -2,10 +2,8 @@ package com.mes.springsecurityapi.controllers;
 
 import com.mes.springsecurityapi.domain.security.DTO.*;
 import com.mes.springsecurityapi.security.permissions.ClientPermission;
-import com.mes.springsecurityapi.security.services.SignupProcessService.LoginService;
-import com.mes.springsecurityapi.security.services.SignupProcessService.LogoutService;
-import com.mes.springsecurityapi.security.services.SignupProcessService.RegistrationService;
-import com.mes.springsecurityapi.security.services.SignupProcessService.VerificationService;
+import com.mes.springsecurityapi.security.services.SignupProcessService.*;
+import com.mes.springsecurityapi.security.services.security.SecurityUserLibraryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
@@ -17,6 +15,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
+
+import javax.validation.constraints.NotNull;
+import java.io.Serializable;
 
 /**
  * Created by mesar on 12/23/2020
@@ -31,10 +32,12 @@ public class AuthController {
     private final LoginService loginService;
     private final LogoutService logoutService;
     private final VerificationService verificationService;
+    private final PasswordService passwordService;
+    private final SecurityUserLibraryService securityUserLibraryService;
 
 
     @PostMapping("/login")
-    public Mono<ResponseEntity<?>> login(@RequestBody AuthRequest ar, ServerHttpResponse serverHttpResponse) {
+    public Mono<ResponseEntity<? extends Serializable>> login(@RequestBody AuthRequest ar, ServerHttpResponse serverHttpResponse) {
         return loginService.login(ar, serverHttpResponse);
     }
 
@@ -49,13 +52,30 @@ public class AuthController {
         return registrationService.registerClient(userDTO, serverHttpRequest);
     }
 
-    @PostMapping("/verify")
-    public Mono<HttpResponse> sendUserVerification(@RequestBody SendVerificationForm sendVerificationForm, ServerHttpRequest serverHttpRequest) {
+    @PostMapping("/verify/account")
+    public Mono<HttpResponse> sendUserAccountVerification(@RequestBody SendVerificationForm sendVerificationForm, ServerHttpRequest serverHttpRequest) {
         return verificationService.sendVerificationRequest(sendVerificationForm, serverHttpRequest);
     }
 
-    @PostMapping("/verify/validate")
-    public Mono<HttpResponse> validateVerificationToken(@RequestBody ValidateVerificationForm validateVerificationForm){
-        return verificationService.validateVerificationToken(validateVerificationForm);
+    @PostMapping("/verify/account/validate")
+    public Mono<HttpResponse> validateAccountVerificationToken(@RequestBody UserVerificationForm userVerificationForm){
+        return verificationService.validateVerificationToken(userVerificationForm);
+    }
+
+    @PostMapping("/verify/password")
+    public Mono<HttpResponse> sendUserPasswordVerification(@RequestBody SendVerificationForm sendVerificationForm, ServerHttpRequest serverHttpRequest) {
+        return passwordService.sendPasswordUpdateRequest(sendVerificationForm, serverHttpRequest);
+    }
+
+    @PostMapping("/verify/password/validate")
+    public Mono<HttpResponse> validatePasswordUpdateVerificationToken(@RequestBody PasswordUpdateVerificationForm passwordUpdateVerificationForm){
+        return passwordService.validatePasswordVerificationTokenAndUpdate(passwordUpdateVerificationForm);
+    }
+
+    @ClientPermission
+    @PostMapping("/update/password")
+    public Mono<HttpResponse> updatePassword(@RequestBody @NotNull AuthorizedPasswordUpdateVerificationForm authorizedPasswordUpdateVerificationForm,
+                                             ServerHttpRequest serverHttpRequest) {
+        return passwordService.updateAuthorizedUserPassword(authorizedPasswordUpdateVerificationForm, serverHttpRequest);
     }
 }

@@ -2,6 +2,7 @@ package com.mes.springsecurityapi.security.services.SignupProcessService;
 
 import com.mes.springsecurityapi.domain.security.DTO.AuthRequest;
 import com.mes.springsecurityapi.domain.security.DTO.AuthResponse;
+import com.mes.springsecurityapi.domain.security.DTO.HttpResponse;
 import com.mes.springsecurityapi.domain.security.DTO.UserRoleAndAuthoritiesDTO;
 import com.mes.springsecurityapi.domain.security.SecurityUserLibrary;
 import com.mes.springsecurityapi.domain.security.User;
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 import javax.validation.constraints.NotNull;
+import java.io.Serializable;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.Set;
@@ -42,7 +44,7 @@ public class LoginServiceImpl implements LoginService {
     private boolean isCookieSecure = false;
 
     @Override
-    public Mono<ResponseEntity<?>> login(@NotNull AuthRequest ar, ServerHttpResponse serverHttpResponse){
+    public Mono<ResponseEntity<? extends Serializable>> login(@NotNull AuthRequest ar, ServerHttpResponse serverHttpResponse){
 
         log.debug("Searching for username: {} and password: {}", ar.getUsername(), ar.getPassword());
 
@@ -50,26 +52,44 @@ public class LoginServiceImpl implements LoginService {
         Mono<Set<UserRoleAndAuthoritiesDTO>> joinMono = joinService.findByUsername(ar.getUsername());
         return userMono.zipWith(joinMono)
                 .map(tuple -> {
-
                     User user = tuple.getT1();
                     Set<UserRoleAndAuthoritiesDTO> userRolesAndAuths = tuple.getT2();
 
                     log.info("Found username: {} and roles & authorities: {}", user.getUsername(), userRolesAndAuths);
-                    if (passwordEncoder.matches(ar.getPassword(), user.getPassword()) && user.getIsVerified()) {
-
-                        String token = generateSecurityToken(user, userRolesAndAuths);
-                        createLoginSessionCookie(serverHttpResponse, token);
-
-                        user.setLastLogin(Timestamp.from(Instant.now()));
-                        userService.saveOrUpdateUser(user).subscribe();
-
-                        return ResponseEntity.ok()
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .body(new AuthResponse(token, user.getUsername()));
-                    } else {
+                    if(!passwordEncoder.matches(ar.getPassword(), user.getPassword())){
                         log.info("Password does not match. Unauthorized");
-                        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+                        return ResponseEntity.badRequest()
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .body(new HttpResponse(HttpStatus.UNAUTHORIZED,
+                                        HttpResponse.ResponseType.FAILURE, "Password does not match"));
                     }
+
+                    if (!user.getIsVerified()){
+                        return ResponseEntity.badRequest()
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .body(new HttpResponse(HttpStatus.UNAUTHORIZED,
+                                        HttpResponse.ResponseType.FAILURE,
+                                        "User account is not verified! Validate the token within 3 minutes or" +
+                                        " request account verification."));
+                    }
+
+                    if (!user.getIsPasswordTokenVerified()){
+                        return ResponseEntity.badRequest()
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .body(new HttpResponse(HttpStatus.UNAUTHORIZED,
+                                        HttpResponse.ResponseType.FAILURE,
+                                        "User password token is not validated. " +
+                                        "Validate the token within 3 minutes or request password update!."));
+                    }
+
+                    String token = generateSecurityToken(user, userRolesAndAuths);
+                    createLoginSessionCookie(serverHttpResponse, token);
+
+                    user.setLastLogin(Timestamp.from(Instant.now()));
+                    userService.saveOrUpdateUser(user).subscribe();
+                    return ResponseEntity.ok()
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .body(new AuthResponse(token, user.getUsername()));
                 }).defaultIfEmpty(ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
     }
 

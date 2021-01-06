@@ -54,17 +54,18 @@ public class SecurityUserLibraryRepository implements ReactiveUserDetailsService
         Mono<User> userMono = userService.findByUsername(user.getUsername());
         return userMono.zipWith(authoritySetMono)
                 .switchIfEmpty(Mono.defer(() -> {
-                    log.warn("User not found in In memory User Details Repository method");
+                    log.debug("User not found in In memory User Details Repository method");
                     return Mono.error(new UsernameNotFoundException("User Not Found"));
-                }))
-                .doOnSuccess(u -> {
-                    User userFromTuple = u.getT1();
+                })).map(tuple -> {
+                    log.debug("Updating user password and account modification details");
+                    User userFromTuple = tuple.getT1();
                     userFromTuple.setPassword(passwordEncoder.encode(newPassword));
                     userFromTuple.setLastModifiedDate(Timestamp.from(Instant.now()));
-                })
-                .map(u -> {
-                    userService.saveOrUpdateUser(u.getT1());
-                    return new SecurityUserLibrary(u.getT1(), u.getT2());
+                    userFromTuple.setIsPasswordTokenVerified(true);
+                    userFromTuple.setPasswordTokenExpiresAt(Timestamp.from(Instant.now()));
+                    userService.saveOrUpdateUser(userFromTuple).subscribe();
+                    log.debug("Saved username: {} and password: {}", user.getUsername(), newPassword);
+                    return new SecurityUserLibrary(userFromTuple, tuple.getT2());
                 });
     }
 }

@@ -36,6 +36,12 @@ public class User implements CredentialsContainer{
 
     private String password;
 
+    private String passwordUpdateToken;
+
+    private Timestamp passwordTokenExpiresAt;
+
+    private Boolean isPasswordTokenVerified;
+
     private Timestamp lastLogin;
 
     private String firstName;

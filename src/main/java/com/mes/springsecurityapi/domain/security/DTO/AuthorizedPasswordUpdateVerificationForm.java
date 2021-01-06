@@ -15,14 +15,14 @@ import java.io.Serializable;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-public class ValidateVerificationForm implements Serializable {
+public class AuthorizedPasswordUpdateVerificationForm implements Serializable {
 
     private static final long serialVersionUID = -1778795510864337828L;
 
     @NotNull
     private String username;
     @NotNull
-    private String password;
+    private String oldPassword;
     @NotNull
-    private String validationToken;
+    private String newPassword;
 }

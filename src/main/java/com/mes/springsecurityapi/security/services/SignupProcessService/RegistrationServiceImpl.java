@@ -57,7 +57,7 @@ public class RegistrationServiceImpl implements RegistrationService {
                     }else{
                         log.debug("Creating a new User: {}", userDTO);
                         return this.createRegistration(userDTO, "CLIENT", "client.rights")
-                                .flatMap(user -> Mono.just(emailService.sendEmail(user, origin)));
+                                .flatMap(user -> Mono.just(emailService.sendAccountVerificationEmail(user, origin)));
                     }
                 });
     }
@@ -88,6 +88,7 @@ public class RegistrationServiceImpl implements RegistrationService {
                 .verificationToken(verificationToken)
                 .verificationExpiresAt(verificationTokenExpiresAt)
                 .isVerified(false)
+                .isPasswordTokenVerified(true)
                 .lastModifiedDate(Timestamp.from(Instant.now()))
                 .address(address)
                 .build();

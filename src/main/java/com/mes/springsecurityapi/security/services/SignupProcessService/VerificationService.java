@@ -2,7 +2,7 @@ package com.mes.springsecurityapi.security.services.SignupProcessService;
 
 import com.mes.springsecurityapi.domain.security.DTO.HttpResponse;
 import com.mes.springsecurityapi.domain.security.DTO.SendVerificationForm;
-import com.mes.springsecurityapi.domain.security.DTO.ValidateVerificationForm;
+import com.mes.springsecurityapi.domain.security.DTO.UserVerificationForm;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import reactor.core.publisher.Mono;
 
@@ -14,5 +14,5 @@ import javax.validation.constraints.NotNull;
 public interface VerificationService {
 
     Mono<HttpResponse> sendVerificationRequest(@NotNull SendVerificationForm sendVerificationForm, ServerHttpRequest serverHttpRequest);
-    Mono<HttpResponse> validateVerificationToken(@NotNull ValidateVerificationForm validateVerificationForm);
+    Mono<HttpResponse> validateVerificationToken(@NotNull UserVerificationForm userVerificationForm);
 }

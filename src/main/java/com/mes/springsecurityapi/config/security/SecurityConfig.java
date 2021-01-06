@@ -76,11 +76,12 @@ public class SecurityConfig {
                 .matchers(EndpointRequest.to("health")).permitAll()
                 .matchers(EndpointRequest.to("info")).permitAll()
                 .pathMatchers("/").permitAll()
-                .pathMatchers("/api/auth/login**").permitAll()
-                .pathMatchers("/api/auth/logout**").permitAll()
+                .pathMatchers("/api/auth/login").permitAll()
                 .pathMatchers("/api/auth/register").permitAll()
-                .pathMatchers("/api/auth/verify**").permitAll()
-                .pathMatchers("/api/auth/verify/validate**").permitAll()
+                .pathMatchers("/api/auth/verify/account").permitAll()
+                .pathMatchers("/api/auth/verify/account/validate").permitAll()
+                .pathMatchers("/api/auth/verify/password").permitAll()
+                .pathMatchers("/api/auth/verify/password/validate").permitAll()
                 .anyExchange().authenticated()
             .and();
 

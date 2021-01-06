@@ -6,11 +6,12 @@ import org.springframework.http.server.reactive.ServerHttpResponse;
 import reactor.core.publisher.Mono;
 
 import javax.validation.constraints.NotNull;
+import java.io.Serializable;
 
 /**
  * Created by mesar on 12/28/2020
  */
 public interface LoginService {
 
-    Mono<ResponseEntity<?>>  login(@NotNull AuthRequest ar, ServerHttpResponse serverHttpResponse);
+    Mono<ResponseEntity<? extends Serializable>>  login(@NotNull AuthRequest ar, ServerHttpResponse serverHttpResponse);
 }
