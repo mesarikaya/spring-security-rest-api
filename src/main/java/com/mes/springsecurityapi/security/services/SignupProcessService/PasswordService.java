@@ -1,9 +1,9 @@
 package com.mes.springsecurityapi.security.services.SignupProcessService;
 
 import com.mes.springsecurityapi.domain.security.DTO.AuthorizedPasswordUpdateVerificationForm;
+import com.mes.springsecurityapi.domain.security.DTO.ForgotPasswordForm;
 import com.mes.springsecurityapi.domain.security.DTO.HttpResponse;
 import com.mes.springsecurityapi.domain.security.DTO.PasswordUpdateVerificationForm;
-import com.mes.springsecurityapi.domain.security.DTO.SendVerificationForm;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import reactor.core.publisher.Mono;
 
@@ -14,7 +14,7 @@ import javax.validation.constraints.NotNull;
  */
 public interface PasswordService {
 
-    Mono<HttpResponse> sendPasswordUpdateRequest(@NotNull SendVerificationForm sendVerificationForm, ServerHttpRequest serverHttpRequest);
+    Mono<HttpResponse> sendPasswordUpdateRequest(@NotNull ForgotPasswordForm forgotPasswordForm, ServerHttpRequest serverHttpRequest);
     Mono<HttpResponse> validatePasswordVerificationTokenAndUpdate(@NotNull PasswordUpdateVerificationForm passwordUpdateVerificationForm);
     Mono<HttpResponse> updateAuthorizedUserPassword(@NotNull AuthorizedPasswordUpdateVerificationForm authorizedPasswordUpdateVerificationForm,
                                                     ServerHttpRequest serverHttpRequest);

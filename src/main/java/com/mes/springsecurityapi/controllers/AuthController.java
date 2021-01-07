@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
 
-import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 
 /**
@@ -63,8 +62,8 @@ public class AuthController {
     }
 
     @PostMapping("/verify/password")
-    public Mono<HttpResponse> sendUserPasswordVerification(@RequestBody SendVerificationForm sendVerificationForm, ServerHttpRequest serverHttpRequest) {
-        return passwordService.sendPasswordUpdateRequest(sendVerificationForm, serverHttpRequest);
+    public Mono<HttpResponse> sendUserPasswordVerification(@RequestBody ForgotPasswordForm forgotPasswordForm, ServerHttpRequest serverHttpRequest) {
+        return passwordService.sendPasswordUpdateRequest(forgotPasswordForm, serverHttpRequest);
     }
 
     @PostMapping("/verify/password/validate")
@@ -74,7 +73,7 @@ public class AuthController {
 
     @ClientPermission
     @PostMapping("/update/password")
-    public Mono<HttpResponse> updatePassword(@RequestBody @NotNull AuthorizedPasswordUpdateVerificationForm authorizedPasswordUpdateVerificationForm,
+    public Mono<HttpResponse> updatePassword(@RequestBody AuthorizedPasswordUpdateVerificationForm authorizedPasswordUpdateVerificationForm,
                                              ServerHttpRequest serverHttpRequest) {
         return passwordService.updateAuthorizedUserPassword(authorizedPasswordUpdateVerificationForm, serverHttpRequest);
     }

@@ -1,9 +1,9 @@
 package com.mes.springsecurityapi.security.services.SignupProcessService;
 
 import com.mes.springsecurityapi.domain.security.DTO.AuthorizedPasswordUpdateVerificationForm;
+import com.mes.springsecurityapi.domain.security.DTO.ForgotPasswordForm;
 import com.mes.springsecurityapi.domain.security.DTO.HttpResponse;
 import com.mes.springsecurityapi.domain.security.DTO.PasswordUpdateVerificationForm;
-import com.mes.springsecurityapi.domain.security.DTO.SendVerificationForm;
 import com.mes.springsecurityapi.domain.security.User;
 import com.mes.springsecurityapi.security.services.email.EmailService;
 import com.mes.springsecurityapi.security.services.security.SecurityUserLibraryService;
@@ -37,10 +37,10 @@ public class PasswordServiceImpl implements PasswordService {
 
     @Transactional
     @Override
-    public Mono<HttpResponse> sendPasswordUpdateRequest(@NotNull SendVerificationForm sendVerificationForm,
-                                                      ServerHttpRequest serverHttpRequest) {
-        String username = sendVerificationForm.getUsername();
-        String password = sendVerificationForm.getPassword();
+    public Mono<HttpResponse> sendPasswordUpdateRequest(@NotNull ForgotPasswordForm forgotPasswordForm,
+                                                        ServerHttpRequest serverHttpRequest) {
+
+        String username = forgotPasswordForm.getUsername();
         String origin = serverHttpRequest.getHeaders().getOrigin();
 
         Mono<HttpResponse> badRequestMono = createHttpResponse(HttpStatus.BAD_REQUEST,
@@ -48,30 +48,15 @@ public class PasswordServiceImpl implements PasswordService {
 
         Mono<HttpResponse> goodRequestMono =createHttpResponse(HttpStatus.ACCEPTED,
                 HttpResponse.ResponseType.SUCCESS,"Password Verification request has been successfully sent!");
-
+        log.debug("Send Password Request Token: Starting password update token delivery for username: {}", username);
         return userService.findByUsername(username)
                 .flatMap(user -> {
                     log.debug("Send Password Request Token: verifying for user: {}", user.toString());
-                    if (passwordEncoder.matches(password, user.getPassword())){
-                        log.debug("Send Password Request Token: Credentials check has passed.");
-                        return renewPasswordVerificationDetails(user.getUsername());
-                    }else{
-                        log.debug("Send Password Request Token: Credentials check has failed.");
-                        User invalidUser = new User();
-                        return Mono.just(invalidUser);
-                    }
-                })
-                .flatMap(user -> {
-                    log.debug("Send Password Request Token: Returned user after credentials check: {} ", user.toString());
-                    if (user.getId() == null) {
-                        log.debug("Send Password Request Token: Rejecting request.");
-                        return badRequestMono;
-                    }else {
-                        log.debug("Send Password Request Token: Sending verification email as per request.");
-                        return Mono.just(emailService.sendPasswordVerificationEmail(user, origin));
-                    }
-                })
-                .flatMap(responseEntity -> {
+                    return renewPasswordVerificationDetails(user.getUsername());
+                }).flatMap(user -> {
+                    log.debug("Send Password Request Token: Sending verification email as per request.");
+                    return Mono.just(emailService.sendPasswordVerificationEmail(user, origin));
+                }).flatMap(responseEntity -> {
                     log.debug("Send Password Request Token: Password Update Email has been sent and response is: {}", responseEntity);
                     if (responseEntity.getType() == HttpResponse.ResponseType.SUCCESS){
                         return goodRequestMono;
