@@ -45,30 +45,29 @@ public class AuthorityServiceImpl implements AuthorityService{
     @Transactional
     @Override
     public Mono<Authority> saveOrUpdate(@NotNull Authority authority) {
-        if (Objects.isNull(authority)){
-            if (!Objects.isNull(authority.getPermission())){
-                return this.createAuthority(authority);
-            } else{
 
-                return authoritiesRepository.findByPermission(authority.getPermission())
-                        .next()
-                        .flatMap(authorityInDb -> {
-                            log.debug("Authority in db is: {}", authorityInDb);
-                            log.debug("Update the role");
-                            authority.setId(authorityInDb.getId());
-                            log.debug("Authority in repository: {}", authority);
-                            return authoritiesRepository.save(authority);
-                        })
-                        .switchIfEmpty(Mono.defer(() -> {
-                            log.debug("Creating a new Authority.");
-                            log.debug("Authority in repository: {}", authority);
-                            return this.createAuthority(authority);
-                        }));
-            }
-        }else{
-            log.debug("A Null user data is entered. Do not process!");
+        if (Objects.isNull(authority)) {
             return Mono.empty();
         }
+
+        if (Objects.isNull(authority.getPermission())) {
+            return Mono.empty();
+        }
+
+        return authoritiesRepository.findByPermission(authority.getPermission())
+                .next()
+                .flatMap(authorityInDb -> {
+                    log.debug("Authority in db is: {}", authorityInDb);
+                    log.debug("Update the role");
+                    authority.setId(authorityInDb.getId());
+                    log.debug("Authority in repository: {}", authority);
+                    return authoritiesRepository.save(authority);
+                })
+                .switchIfEmpty(Mono.defer(() -> {
+                    log.debug("Creating a new Authority.");
+                    log.debug("Authority in repository: {}", authority);
+                    return this.createAuthority(authority);
+                }));
     }
 
     private Mono<Authority> createAuthority(Authority authority) {

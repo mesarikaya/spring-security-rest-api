@@ -39,29 +39,29 @@ public class RoleServiceImpl implements RoleService{
     @Transactional
     @Override
     public Mono<Role> saveOrUpdate(Role role) {
-        if (Objects.isNull(role)){
-            if (!Objects.isNull(role.getName())){
-                return this.createRole(role);
-            } else{
-                return roleRepository.findByName(role.getName())
-                        .next()
-                        .flatMap(roleInDb -> {
-                            log.debug("Role in db is: {}", roleInDb);
-                            log.debug("Update the role");
-                            role.setId(roleInDb.getId());
-                            log.debug("Role in repository: " + role);
-                            return roleRepository.save(role);
-                        })
-                        .switchIfEmpty(Mono.defer(() -> {
-                            log.debug("Creating a new Role.");
-                            log.debug("Role in repository: {}", role);
-                            return this.createRole(role);
-                        }));
-            }
-        }else{
-            log.debug("A Null user data is entered. Do not process!");
+
+        if (Objects.isNull(role)) {
             return Mono.empty();
         }
+
+        if (Objects.isNull(role.getName())) {
+            return Mono.empty();
+        }
+
+        return roleRepository.findByName(role.getName())
+                .next()
+                .flatMap(roleInDb -> {
+                    log.debug("Role in db is: {}", roleInDb);
+                    log.debug("Update the role");
+                    role.setId(roleInDb.getId());
+                    log.debug("Role in repository: " + role);
+                    return roleRepository.save(role);
+                })
+                .switchIfEmpty(Mono.defer(() -> {
+                    log.debug("Creating a new Role.");
+                    log.debug("Role in repository: {}", role);
+                    return this.createRole(role);
+                }));
     }
 
     private Mono<Role> createRole(Role role) {

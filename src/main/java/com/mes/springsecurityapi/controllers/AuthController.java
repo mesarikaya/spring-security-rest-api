@@ -3,7 +3,6 @@ package com.mes.springsecurityapi.controllers;
 import com.mes.springsecurityapi.domain.security.DTO.*;
 import com.mes.springsecurityapi.security.permissions.ClientPermission;
 import com.mes.springsecurityapi.security.services.SignupProcessService.*;
-import com.mes.springsecurityapi.security.services.security.SecurityUserLibraryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
@@ -32,8 +31,6 @@ public class AuthController {
     private final LogoutService logoutService;
     private final VerificationService verificationService;
     private final PasswordService passwordService;
-    private final SecurityUserLibraryService securityUserLibraryService;
-
 
     @PostMapping("/login")
     public Mono<ResponseEntity<? extends Serializable>> login(@RequestBody AuthRequest ar, ServerHttpResponse serverHttpResponse) {

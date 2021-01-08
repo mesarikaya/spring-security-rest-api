@@ -29,28 +29,28 @@ public class UserServiceImpl implements UserService {
     @Transactional
     @Override
     public Mono<User> saveOrUpdateUser(User user) {
-        if (!Objects.isNull(user)){
-            if (!Objects.isNull(user.getUsername())){
-                return this.createUser(user);
-            } else{
-                return userRepository.findById(user.getId())
-                        .flatMap(userInDb -> {
-                            log.debug("user in db is: {}", userInDb);
-                            log.info("Update the user");
-                            user.setId(userInDb.getId());
-                            log.info("User in repository: {}", user);
-                            return userRepository.save(user);
-                        })
-                        .switchIfEmpty(Mono.defer(() -> {
-                            log.info("Creating a new User");
-                            log.info("User in repository: {}", user);
-                            return this.createUser(user);
-                        }));
-            }
-        }else{
-            log.debug("A Null user data is entered. Do not process!");
+
+        if (Objects.isNull(user)) {
             return Mono.empty();
         }
+
+        if (Objects.isNull(user.getUsername())) {
+            return Mono.empty();
+        }
+
+        return userRepository.findByUsername(user.getUsername())
+                .flatMap(userInDb -> {
+                    log.debug("user in db is: {}", userInDb);
+                    log.debug("Update the user");
+                    user.setId(userInDb.getId());
+                    log.debug("User in repository: {}", user);
+                    return userRepository.save(user);
+                })
+                .switchIfEmpty(Mono.defer(() -> {
+                    log.debug("Creating a new User");
+                    log.debug("User in repository: {}", user);
+                    return this.createUser(user);
+                }));
     }
 
     private Mono<User> createUser(User user) {
